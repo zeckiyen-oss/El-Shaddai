@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Espace Admin — Studios El-Shaddai Prod</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{--blue:#0D1B6E;--blue-mid:#1E40AF;--rose:#E4007F;--rose-light:#FCE7F3;--grey:#F8FAFC;--text:#1E293B;--muted:#64748B;--border:#E2E8F0;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;color:var(--text);background:var(--grey);}
+svg.icon{width:18px;height:18px;flex-shrink:0;display:block;}
+
+/* ===== LOGIN ===== */
+.login-container{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#060E3A,#0D1B6E);z-index:1000;padding:20px;}
+.login-box{background:#fff;border-radius:18px;padding:40px 32px;max-width:380px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.35);}
+.login-logo{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:900;color:var(--blue);text-align:center;margin-bottom:6px;}
+.login-logo span{color:var(--rose);}
+.login-box h2{font-size:.95rem;font-weight:600;color:var(--muted);text-align:center;margin-bottom:28px;}
+.login-form{display:flex;flex-direction:column;gap:14px;}
+.login-form input{padding:12px 16px;border:1.5px solid #CBD5E1;border-radius:10px;font-size:.92rem;font-family:'Inter',sans-serif;}
+.login-form input:focus{outline:none;border-color:var(--rose);box-shadow:0 0 0 3px rgba(228,0,127,.12);}
+.login-btn{background:var(--rose);color:#fff;padding:13px;border-radius:10px;border:none;font-weight:700;font-size:.92rem;cursor:pointer;transition:.2s;}
+.login-btn:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(228,0,127,.35);}
+.login-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.login-error{color:#DC2626;font-size:.83rem;text-align:center;min-height:18px;}
+
+/* ===== LAYOUT ===== */
+.admin-container{display:none;}
+.admin-container.logged-in{display:block;}
+.admin-header{position:sticky;top:0;z-index:50;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:14px 24px;box-shadow:0 2px 12px rgba(0,0,0,.15);}
+.admin-header h1{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:900;}
+.admin-header h1 span{color:var(--rose-light);font-weight:400;font-size:.75rem;display:block;margin-top:2px;font-family:'Inter',sans-serif;letter-spacing:.04em;}
+.logout-btn{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.25);padding:8px 16px;border-radius:8px;font-size:.82rem;font-weight:600;cursor:pointer;transition:.2s;}
+.logout-btn:hover{background:var(--rose);border-color:var(--rose);}
+
+.admin-body{display:flex;min-height:calc(100vh - 62px);}
+.admin-sidebar{width:220px;flex-shrink:0;background:#fff;border-right:1px solid var(--border);padding:18px 12px;display:flex;flex-direction:column;gap:4px;}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:8px;cursor:pointer;font-size:.87rem;font-weight:600;color:var(--muted);transition:.15s;border:none;background:none;width:100%;text-align:left;font-family:'Inter',sans-serif;}
+.sidebar-item:hover{background:var(--grey);color:var(--blue);}
+.sidebar-item.active{background:var(--blue);color:#fff;}
+.sidebar-item svg{width:17px;height:17px;flex-shrink:0;}
+
+.admin-main{flex:1;padding:28px;max-width:900px;overflow-x:hidden;}
+.admin-section{display:none;}
+.admin-section.active{display:block;animation:fadeIn .25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.page-title{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:900;color:var(--blue);margin-bottom:6px;}
+.page-sub{color:var(--muted);font-size:.88rem;margin-bottom:24px;}
+
+/* ===== CARDS & FORMS ===== */
+.panel{background:#fff;border-radius:14px;padding:24px;border:1px solid var(--border);margin-bottom:24px;}
+.panel h3{font-size:1.05rem;font-weight:700;color:var(--text);margin-bottom:4px;}
+.panel .panel-hint{font-size:.82rem;color:var(--muted);margin-bottom:18px;}
+.form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.form-group label{font-size:.82rem;font-weight:600;color:var(--text);}
+.form-group .hint{font-size:.74rem;color:var(--muted);font-weight:400;}
+.form-group input,.form-group textarea,.form-group select{padding:10px 14px;border:1.5px solid #CBD5E1;border-radius:8px;font-family:'Inter',sans-serif;font-size:.87rem;resize:vertical;background:#fff;}
+.form-group input:focus,.form-group textarea:focus,.form-group select:focus{outline:none;border-color:var(--rose);box-shadow:0 0 0 3px rgba(228,0,127,.1);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.form-actions{display:flex;gap:10px;margin-top:6px;}
+.btn-submit{background:var(--rose);color:#fff;padding:11px 22px;border:none;border-radius:8px;font-weight:700;font-size:.87rem;cursor:pointer;transition:.2s;}
+.btn-submit:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(228,0,127,.3);}
+.btn-cancel{background:var(--grey);color:var(--text);padding:11px 22px;border:1px solid var(--border);border-radius:8px;font-weight:600;font-size:.87rem;cursor:pointer;}
+.btn-cancel:hover{background:#EEF1F5;}
+
+/* ===== LISTS ===== */
+.item-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;}
+.item-card{background:#fff;border-radius:12px;padding:18px;border:1px solid var(--border);}
+.item-card h4{font-size:.95rem;font-weight:700;color:var(--text);margin-bottom:6px;}
+.item-card p{font-size:.82rem;color:var(--muted);line-height:1.5;margin-bottom:6px;}
+.item-card .item-meta{font-size:.72rem;color:var(--rose);font-weight:600;text-transform:uppercase;letter-spacing:.03em;margin-bottom:10px;}
+.item-card .item-link{font-size:.74rem;color:var(--blue-mid);word-break:break-all;display:block;margin-bottom:10px;}
+.item-actions{display:flex;gap:8px;}
+.btn-tiny{padding:6px 13px;font-size:.76rem;font-weight:600;border:none;border-radius:6px;cursor:pointer;transition:.15s;}
+.btn-tiny.edit{background:var(--blue-mid);color:#fff;}
+.btn-tiny.delete{background:#FEE2E2;color:#B91C1C;}
+.btn-tiny:hover{opacity:.85;}
+.empty-state{color:var(--muted);font-size:.87rem;padding:24px;text-align:center;background:#fff;border:1px dashed var(--border);border-radius:12px;}
+
+.message{padding:12px 16px;border-radius:8px;margin-bottom:18px;font-size:.87rem;font-weight:500;}
+.message.success{background:#D1FAE5;color:#065F46;}
+.message.error{background:#FEE2E2;color:#991B1B;}
+
+@media(max-width:800px){
+  .admin-body{flex-direction:column;}
+  .admin-sidebar{width:100%;flex-direction:row;overflow-x:auto;border-right:none;border-bottom:1px solid var(--border);}
+  .sidebar-item{white-space:nowrap;}
+  .admin-main{padding:18px;}
+  .form-row{grid-template-columns:1fr;}
+  .item-list{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<svg style="display:none" aria-hidden="true">
+<symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></symbol>
+<symbol id="i-video" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></symbol>
+<symbol id="i-sliders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+</svg>
+
+<!-- LOGIN -->
+<div class="login-container" id="loginContainer">
+  <div class="login-box">
+    <div class="login-logo">El-Shaddai <span>Prod</span></div>
+    <h2>Espace d'administration</h2>
+    <form class="login-form" id="loginForm">
+      <input type="password" id="passwordInput" placeholder="Mot de passe" required autocomplete="current-password"/>
+      <button type="submit" class="login-btn" id="loginBtn">Se connecter</button>
+      <div class="login-error" id="loginError"></div>
+    </form>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div class="admin-container" id="adminContainer">
+  <div class="admin-header">
+    <h1>Studios El-Shaddai Prod<span>Espace d'administration</span></h1>
+    <button class="logout-btn" onclick="logout()">Se déconnecter</button>
+  </div>
+
+  <div class="admin-body">
+    <div class="admin-sidebar">
+      <button class="sidebar-item active" onclick="switchSection('formations', this)"><svg class="icon"><use href="#i-list"></use></svg> Formations</button>
+      <button class="sidebar-item" onclick="switchSection('medias', this)"><svg class="icon"><use href="#i-video"></use></svg> Médias</button>
+      <button class="sidebar-item" onclick="switchSection('site', this)"><svg class="icon"><use href="#i-sliders"></use></svg> Informations du site</button>
+      <button class="sidebar-item" onclick="switchSection('security', this)"><svg class="icon"><use href="#i-lock"></use></svg> Sécurité</button>
+    </div>
+
+    <div class="admin-main">
+
+      <!-- FORMATIONS -->
+      <div class="admin-section active" id="formations-section">
+        <div class="page-title">Formations</div>
+        <p class="page-sub">Ajoutez, modifiez ou retirez les formations affichées sur le site.</p>
+        <div id="formationsMessage"></div>
+        <div class="panel">
+          <h3 id="formationFormTitle">Ajouter une formation</h3>
+          <p class="panel-hint">Ces informations apparaissent directement sur la page publique.</p>
+          <form id="formationForm">
+            <div class="form-row">
+              <div class="form-group"><label>Titre</label><input type="text" id="formTitle" required/></div>
+              <div class="form-group"><label>Niveau</label><input type="text" id="formLevel" placeholder="Ex : Débutant → Avancé" required/></div>
+            </div>
+            <div class="form-group"><label>Description courte</label><input type="text" id="formDesc" required/></div>
+            <div class="form-group">
+              <label>Style visuel</label>
+              <select id="formStyle" required>
+                <option value="informatique">Informatique (bleu)</option>
+                <option value="design">Design (rose)</option>
+                <option value="web">Web (violet)</option>
+                <option value="video">Vidéo (turquoise)</option>
+                <option value="audio">Audio (foncé)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Points clés <span class="hint">(un point par ligne)</span></label>
+              <textarea id="formContent" rows="4" placeholder="Exemple :&#10;Maintenance informatique&#10;Administration réseau" required></textarea>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn-submit" id="formationSubmitBtn">Ajouter la formation</button>
+              <button type="button" class="btn-cancel" onclick="resetFormationForm()">Annuler</button>
+            </div>
+          </form>
+        </div>
+        <div class="item-list" id="formationsList"></div>
+      </div>
+
+      <!-- MEDIAS -->
+      <div class="admin-section" id="medias-section">
+        <div class="page-title">Médias</div>
+        <p class="page-sub">Ajoutez des vidéos (YouTube) ou des audios (SoundCloud). Ils s'affichent directement dans le lecteur du site, sans rediriger le visiteur ailleurs.</p>
+        <div id="mediasMessage"></div>
+        <div class="panel">
+          <h3 id="mediaFormTitle">Ajouter un média</h3>
+          <p class="panel-hint">Collez simplement le lien de la vidéo ou de l'audio, le site s'occupe du reste.</p>
+          <form id="mediaForm">
+            <div class="form-group"><label>Titre</label><input type="text" id="mediaTitle" required/></div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Type</label>
+                <select id="mediaType" required>
+                  <option value="video">Vidéo</option>
+                  <option value="audio">Audio</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Catégorie</label>
+                <select id="mediaCategory" required>
+                  <option value="formations">Formation</option>
+                  <option value="productions">Production</option>
+                  <option value="audios">Audio</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Lien <span class="hint">(YouTube ou SoundCloud)</span></label>
+              <input type="url" id="mediaLink" placeholder="https://youtube.com/watch?v=... ou https://soundcloud.com/..." required/>
+            </div>
+            <div class="form-group"><label>Description</label><textarea id="mediaDesc" rows="2" required></textarea></div>
+            <div class="form-actions">
+              <button type="submit" class="btn-submit" id="mediaSubmitBtn">Ajouter le média</button>
+              <button type="button" class="btn-cancel" onclick="resetMediaForm()">Annuler</button>
+            </div>
+          </form>
+        </div>
+        <div class="item-list" id="mediasList"></div>
+      </div>
+
+      <!-- SITE -->
+      <div class="admin-section" id="site-section">
+        <div class="page-title">Informations du site</div>
+        <p class="page-sub">Ces coordonnées s'affichent dans la section "Contact" et dans le pied de page du site.</p>
+        <div id="siteMessage"></div>
+        <div class="panel">
+          <h3>Coordonnées publiques</h3>
+          <form id="siteSettingsForm">
+            <div class="form-group"><label>Adresse</label><input type="text" id="siteAddressInput" required/></div>
+            <div class="form-group"><label>Email de contact</label><input type="email" id="siteEmailInput" required/></div>
+            <div class="form-group"><label>Lien TikTok</label><input type="url" id="siteTiktokInput" required/></div>
+            <div class="form-actions">
+              <button type="submit" class="btn-submit">Enregistrer les modifications</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- SECURITY -->
+      <div class="admin-section" id="security-section">
+        <div class="page-title">Sécurité</div>
+        <p class="page-sub">Gérez votre mot de passe et vos sauvegardes.</p>
+        <div id="securityMessage"></div>
+        <div class="panel">
+          <h3>Changer le mot de passe</h3>
+          <form id="passwordForm">
+            <div class="form-group"><label>Mot de passe actuel</label><input type="password" id="oldPassword" required/></div>
+            <div class="form-group"><label>Nouveau mot de passe <span class="hint">(6 caractères minimum)</span></label><input type="password" id="newPassword" required minlength="6"/></div>
+            <div class="form-group"><label>Confirmer le nouveau mot de passe</label><input type="password" id="confirmPassword" required/></div>
+            <div class="form-actions">
+              <button type="submit" class="btn-submit">Changer le mot de passe</button>
+            </div>
+          </form>
+        </div>
+        <div class="panel">
+          <h3>Sauvegarde des données</h3>
+          <p class="panel-hint">Téléchargez une copie de vos formations et médias, à conserver de votre côté.</p>
+          <button class="btn-submit" onclick="exportData()">Télécharger la sauvegarde</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= CONSTANTS ================= */
+var INITIAL_PASSWORD = 'elshaddai123';
+var RATE_LIMIT_KEY = 'admin_rate_limit';
+var RATE_LIMIT_MAX = 3;
+var RATE_LIMIT_DURATION = 15 * 60 * 1000;
+
+var STYLE_MAP = {
+  informatique:{icon:'i-monitor', color:'blue'},
+  design:{icon:'i-edit', color:'rose'},
+  web:{icon:'i-globe', color:'violet'},
+  video:{icon:'i-video', color:'teal'},
+  audio:{icon:'i-headphones', color:'dark'}
+};
+
+var DEFAULT_FORMATIONS = [
+  {title:'Informatique & Réseau', desc:'Maîtrisez l\'outil informatique et les réseaux pour les métiers du numérique.', level:'Débutant → Avancé', styleKey:'informatique', points:['Opérateur de Saisie','Maintenance informatique','Administration réseau','Outils bureautiques avancés']},
+  {title:'Graphisme & PAO', desc:'Créez des visuels percutants pour la musique, les arts et la communication.', level:'Débutant → Expert', styleKey:'design', points:['Design graphique & composition','Photoshop & Illustrator','Publishing & mise en page','Identité visuelle & branding']},
+  {title:'Développement Web', desc:'Concevez et développez des sites web professionnels et modernes.', level:'Débutant → Intermédiaire', styleKey:'web', points:['HTML / CSS / JavaScript','Création de sites vitrines','WordPress & CMS','Mise en ligne & hébergement']},
+  {title:'Cadrage & Montage Audiovisuel', desc:'De la prise de vue au montage final, maîtrisez la chaîne audiovisuelle complète.', level:'Débutant → Avancé', styleKey:'video', points:['Techniques de cadrage vidéo','Éclairage professionnel','Montage & post-production','Clip musical & reportage']},
+  {title:'Shooting & Prise de Son', desc:'Maîtrisez l\'enregistrement, le traitement et la prise de son en studio.', level:'Débutant → Expert', styleKey:'audio', points:['Prise de son professionnelle','Traitement audio & mixage','Enregistrement en studio','Mastering & diffusion']}
+];
+
+var DEFAULT_MEDIAS = [
+  {title:'Formation Cadrage Vidéo — Module 1', type:'video', category:'formations', link:'https://youtube.com', desc:'Introduction aux techniques de cadrage professionnel'},
+  {title:'Production Studio — Extrait', type:'audio', category:'productions', link:'https://soundcloud.com', desc:'Aperçu d\'une session d\'enregistrement au studio'},
+  {title:'Formation Graphisme — Démonstration', type:'video', category:'formations', link:'https://youtube.com', desc:'Création d\'une identité visuelle de A à Z'},
+  {title:'Concert & Performance — Laurus"co', type:'audio', category:'audios', link:'https://soundcloud.com', desc:'Archive sonore en hommage au fondateur'}
+];
+
+var DEFAULT_SITE_SETTINGS = {
+  address:'Akpro-Missérété, non loin de la Prison Civile — Bénin',
+  email:'studioelshaddaiprod@gmail.com',
+  tiktok:'https://tiktok.com/@arthurcomabou'
+};
+
+var editingFormationIndex = null;
+var editingMediaIndex = null;
+
+/* ================= HELPERS ================= */
+function escapeHtml(str){
+  var div = document.createElement('div');
+  div.textContent = str == null ? '' : str;
+  return div.innerHTML;
+}
+function simpleHash(str){
+  var hash = 0;
+  for(var i=0;i<str.length;i++){
+    var char = str.charCodeAt(i);
+    hash = ((hash<<5)-hash)+char;
+    hash = hash & hash;
+  }
+  return hash.toString();
+}
+function showMessage(containerId, text, type){
+  var container = document.getElementById(containerId);
+  container.innerHTML = '<div class="message '+type+'">'+escapeHtml(text)+'</div>';
+  setTimeout(function(){ container.innerHTML=''; }, 3500);
+}
+
+/* ================= AUTH & RATE LIMIT ================= */
+function checkRateLimit(){
+  var stored = localStorage.getItem(RATE_LIMIT_KEY);
+  if(!stored) return true;
+  var data = JSON.parse(stored);
+  var elapsed = Date.now() - data.timestamp;
+  if(elapsed > RATE_LIMIT_DURATION){
+    localStorage.removeItem(RATE_LIMIT_KEY);
+    return true;
+  }
+  return data.attempts < RATE_LIMIT_MAX;
+}
+function incrementRateLimit(){
+  var stored = localStorage.getItem(RATE_LIMIT_KEY);
+  var data = {attempts:1, timestamp:Date.now()};
+  if(stored){
+    data = JSON.parse(stored);
+    data.attempts++;
+  }
+  localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(data));
+}
+
+document.getElementById('loginForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  var pwd = document.getElementById('passwordInput').value;
+  var error = document.getElementById('loginError');
+
+  if(!checkRateLimit()){
+    error.textContent = 'Trop de tentatives. Réessayez dans 15 minutes.';
+    return;
+  }
+
+  var storedHash = localStorage.getItem('admin_password') || simpleHash(INITIAL_PASSWORD);
+  if(simpleHash(pwd) === storedHash){
+    sessionStorage.setItem('admin_authenticated','true');
+    localStorage.removeItem(RATE_LIMIT_KEY);
+    document.getElementById('loginContainer').style.display = 'none';
+    document.getElementById('adminContainer').classList.add('logged-in');
+    loadAll();
+  } else {
+    incrementRateLimit();
+    error.textContent = 'Mot de passe incorrect.';
+    document.getElementById('passwordInput').value = '';
+  }
+});
+
+function logout(){
+  sessionStorage.removeItem('admin_authenticated');
+  location.reload();
+}
+
+if(sessionStorage.getItem('admin_authenticated')){
+  document.getElementById('loginContainer').style.display = 'none';
+  document.getElementById('adminContainer').classList.add('logged-in');
+} else {
+  document.getElementById('adminContainer').style.display = 'none';
+}
+
+/* ================= NAVIGATION ================= */
+function switchSection(section, el){
+  var sections = document.querySelectorAll('.admin-section');
+  for(var i=0;i<sections.length;i++){ sections[i].classList.remove('active'); }
+  var items = document.querySelectorAll('.sidebar-item');
+  for(var j=0;j<items.length;j++){ items[j].classList.remove('active'); }
+  document.getElementById(section+'-section').classList.add('active');
+  el.classList.add('active');
+}
+
+/* ================= FORMATIONS ================= */
+function getFormations(){
+  var stored = localStorage.getItem('formations');
+  if(!stored){
+    localStorage.setItem('formations', JSON.stringify(DEFAULT_FORMATIONS));
+    return DEFAULT_FORMATIONS.slice();
+  }
+  return JSON.parse(stored);
+}
+
+function loadFormations(){
+  var formations = getFormations();
+  var list = document.getElementById('formationsList');
+  list.innerHTML = '';
+
+  if(formations.length===0){
+    list.innerHTML = '<div class="empty-state">Aucune formation pour le moment. Ajoutez-en une ci-dessus.</div>';
+    return;
+  }
+
+  formations.forEach(function(f,i){
+    var card = document.createElement('div');
+    card.className = 'item-card';
+    card.innerHTML =
+      '<div class="item-meta">'+escapeHtml(f.level||'')+'</div>'+
+      '<h4>'+escapeHtml(f.title)+'</h4>'+
+      '<p>'+escapeHtml(f.desc)+'</p>'+
+      '<div class="item-actions">'+
+        '<button class="btn-tiny edit" data-idx="'+i+'">Modifier</button>'+
+        '<button class="btn-tiny delete" data-idx="'+i+'">Supprimer</button>'+
+      '</div>';
+    list.appendChild(card);
+  });
+}
+
+document.getElementById('formationsList').addEventListener('click', function(e){
+  var editBtn = e.target.closest('.btn-tiny.edit');
+  var delBtn = e.target.closest('.btn-tiny.delete');
+  if(editBtn) startEditFormation(parseInt(editBtn.dataset.idx,10));
+  if(delBtn) deleteFormation(parseInt(delBtn.dataset.idx,10));
+});
+
+function startEditFormation(idx){
+  var formations = getFormations();
+  var f = formations[idx];
+  if(!f) return;
+  editingFormationIndex = idx;
+  document.getElementById('formTitle').value = f.title;
+  document.getElementById('formDesc').value = f.desc;
+  document.getElementById('formLevel').value = f.level || '';
+  document.getElementById('formStyle').value = f.styleKey || 'informatique';
+  document.getElementById('formContent').value = (f.points||[]).join('\n');
+  document.getElementById('formationFormTitle').textContent = 'Modifier la formation';
+  document.getElementById('formationSubmitBtn').textContent = 'Enregistrer les modifications';
+  document.getElementById('formationForm').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function resetFormationForm(){
+  document.getElementById('formationForm').reset();
+  editingFormationIndex = null;
+  document.getElementById('formationFormTitle').textContent = 'Ajouter une formation';
+  document.getElementById('formationSubmitBtn').textContent = 'Ajouter la formation';
+}
+
+document.getElementById('formationForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  var formations = getFormations();
+  var points = document.getElementById('formContent').value.split('\n').map(function(s){return s.trim();}).filter(Boolean);
+
+  var entry = {
+    title: document.getElementById('formTitle').value.trim(),
+    desc: document.getElementById('formDesc').value.trim(),
+    level: document.getElementById('formLevel').value.trim(),
+    styleKey: document.getElementById('formStyle').value,
+    points: points
+  };
+
+  if(editingFormationIndex !== null){
+    formations[editingFormationIndex] = entry;
+    showMessage('formationsMessage','Formation mise à jour avec succès.','success');
+  } else {
+    formations.push(entry);
+    showMessage('formationsMessage','Formation ajoutée avec succès.','success');
+  }
+
+  localStorage.setItem('formations', JSON.stringify(formations));
+  resetFormationForm();
+  loadFormations();
+});
+
+function deleteFormation(idx){
+  if(!confirm('Supprimer cette formation ?')) return;
+  var formations = getFormations();
+  formations.splice(idx,1);
+  localStorage.setItem('formations', JSON.stringify(formations));
+  loadFormations();
+  showMessage('formationsMessage','Formation supprimée.','success');
+}
+
+/* ================= MEDIAS ================= */
+function getMedias(){
+  var stored = localStorage.getItem('medias');
+  if(!stored){
+    localStorage.setItem('medias', JSON.stringify(DEFAULT_MEDIAS));
+    return DEFAULT_MEDIAS.slice();
+  }
+  return JSON.parse(stored);
+}
+
+function loadMedias(){
+  var medias = getMedias();
+  var list = document.getElementById('mediasList');
+  list.innerHTML = '';
+
+  if(medias.length===0){
+    list.innerHTML = '<div class="empty-state">Aucun média pour le moment. Ajoutez-en un ci-dessus.</div>';
+    return;
+  }
+
+  medias.forEach(function(m,i){
+    var card = document.createElement('div');
+    card.className = 'item-card';
+    card.innerHTML =
+      '<div class="item-meta">'+escapeHtml(m.type)+' · '+escapeHtml(m.category)+'</div>'+
+      '<h4>'+escapeHtml(m.title)+'</h4>'+
+      '<p>'+escapeHtml(m.desc)+'</p>'+
+      '<a class="item-link" href="'+escapeHtml(m.link)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(m.link)+'</a>'+
+      '<div class="item-actions">'+
+        '<button class="btn-tiny edit" data-idx="'+i+'">Modifier</button>'+
+        '<button class="btn-tiny delete" data-idx="'+i+'">Supprimer</button>'+
+      '</div>';
+    list.appendChild(card);
+  });
+}
+
+document.getElementById('mediasList').addEventListener('click', function(e){
+  var editBtn = e.target.closest('.btn-tiny.edit');
+  var delBtn = e.target.closest('.btn-tiny.delete');
+  if(editBtn) startEditMedia(parseInt(editBtn.dataset.idx,10));
+  if(delBtn) deleteMedia(parseInt(delBtn.dataset.idx,10));
+});
+
+function startEditMedia(idx){
+  var medias = getMedias();
+  var m = medias[idx];
+  if(!m) return;
+  editingMediaIndex = idx;
+  document.getElementById('mediaTitle').value = m.title;
+  document.getElementById('mediaType').value = m.type;
+  document.getElementById('mediaCategory').value = m.category;
+  document.getElementById('mediaLink').value = m.link;
+  document.getElementById('mediaDesc').value = m.desc;
+  document.getElementById('mediaFormTitle').textContent = 'Modifier le média';
+  document.getElementById('mediaSubmitBtn').textContent = 'Enregistrer les modifications';
+  document.getElementById('mediaForm').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function resetMediaForm(){
+  document.getElementById('mediaForm').reset();
+  editingMediaIndex = null;
+  document.getElementById('mediaFormTitle').textContent = 'Ajouter un média';
+  document.getElementById('mediaSubmitBtn').textContent = 'Ajouter le média';
+}
+
+document.getElementById('mediaForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  var medias = getMedias();
+
+  var entry = {
+    title: document.getElementById('mediaTitle').value.trim(),
+    type: document.getElementById('mediaType').value,
+    category: document.getElementById('mediaCategory').value,
+    link: document.getElementById('mediaLink').value.trim(),
+    desc: document.getElementById('mediaDesc').value.trim()
+  };
+
+  if(editingMediaIndex !== null){
+    medias[editingMediaIndex] = entry;
+    showMessage('mediasMessage','Média mis à jour avec succès.','success');
+  } else {
+    medias.push(entry);
+    showMessage('mediasMessage','Média ajouté avec succès.','success');
+  }
+
+  localStorage.setItem('medias', JSON.stringify(medias));
+  resetMediaForm();
+  loadMedias();
+});
+
+function deleteMedia(idx){
+  if(!confirm('Supprimer ce média ?')) return;
+  var medias = getMedias();
+  medias.splice(idx,1);
+  localStorage.setItem('medias', JSON.stringify(medias));
+  loadMedias();
+  showMessage('mediasMessage','Média supprimé.','success');
+}
+
+/* ================= SITE SETTINGS ================= */
+function getSiteSettings(){
+  var stored = localStorage.getItem('siteSettings');
+  if(!stored){
+    localStorage.setItem('siteSettings', JSON.stringify(DEFAULT_SITE_SETTINGS));
+    return Object.assign({}, DEFAULT_SITE_SETTINGS);
+  }
+  return JSON.parse(stored);
+}
+
+function loadSiteSettingsForm(){
+  var settings = getSiteSettings();
+  document.getElementById('siteAddressInput').value = settings.address;
+  document.getElementById('siteEmailInput').value = settings.email;
+  document.getElementById('siteTiktokInput').value = settings.tiktok;
+}
+
+document.getElementById('siteSettingsForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  var settings = {
+    address: document.getElementById('siteAddressInput').value.trim(),
+    email: document.getElementById('siteEmailInput').value.trim(),
+    tiktok: document.getElementById('siteTiktokInput').value.trim()
+  };
+  localStorage.setItem('siteSettings', JSON.stringify(settings));
+  showMessage('siteMessage','Informations du site mises à jour avec succès.','success');
+});
+
+/* ================= SECURITY ================= */
+document.getElementById('passwordForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  var oldPwd = document.getElementById('oldPassword').value;
+  var newPwd = document.getElementById('newPassword').value;
+  var confirmPwd = document.getElementById('confirmPassword').value;
+
+  var storedHash = localStorage.getItem('admin_password') || simpleHash(INITIAL_PASSWORD);
+
+  if(simpleHash(oldPwd) !== storedHash){
+    showMessage('securityMessage','Le mot de passe actuel est incorrect.','error');
+    return;
+  }
+  if(newPwd !== confirmPwd){
+    showMessage('securityMessage','Les nouveaux mots de passe ne correspondent pas.','error');
+    return;
+  }
+  if(newPwd.length < 6){
+    showMessage('securityMessage','Le mot de passe doit contenir au moins 6 caractères.','error');
+    return;
+  }
+
+  localStorage.setItem('admin_password', simpleHash(newPwd));
+  document.getElementById('passwordForm').reset();
+  showMessage('securityMessage','Mot de passe changé avec succès.','success');
+});
+
+function exportData(){
+  var data = {
+    formations: getFormations(),
+    medias: getMedias(),
+    siteSettings: getSiteSettings(),
+    exported: new Date().toISOString()
+  };
+  var blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'elshaddai-sauvegarde.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ================= INIT ================= */
+function loadAll(){
+  loadFormations();
+  loadMedias();
+  loadSiteSettingsForm();
+}
+if(sessionStorage.getItem('admin_authenticated')){
+  loadAll();
+}
+</script>
+</body>
+</html>
