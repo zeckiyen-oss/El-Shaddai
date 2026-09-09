@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin - Studios El-Shaddai Prod</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{--blue:#0D1B6E;--rose:#E4007F;--grey:#F8FAFC;--text:#1E293B;--muted:#64748B;}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Inter',sans-serif;color:var(--text);background:var(--grey);}
+
+/* LOGIN */
+.login-container{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#060E3A,#0D1B6E);z-index:1000;}
+.login-box{background:#fff;border-radius:16px;padding:40px;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.login-box h2{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:900;color:var(--blue);margin-bottom:24px;text-align:center;}
+.login-form{display:flex;flex-direction:column;gap:16px;}
+.login-form input{padding:12px 16px;border:1.5px solid #CBD5E1;border-radius:10px;font-size:.9rem;font-family:'Inter',sans-serif;}
+.login-form input:focus{outline:none;border-color:var(--rose);box-shadow:0 0 0 3px rgba(228,0,127,.1);}
+.login-btn{background:var(--rose);color:#fff;padding:12px;border-radius:8px;border:none;font-weight:700;cursor:pointer;transition:.2s;}
+.login-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(228,0,127,.3);}
+.login-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.login-error{color:#DC2626;font-size:.85rem;text-align:center;}
+
+/* ADMIN LAYOUT */
+.admin-container{display:none;min-height:100vh;background:var(--grey);}
+.admin-container.logged-in{display:grid;grid-template-columns:250px 1fr;grid-template-rows:70px 1fr;}
+.admin-header{grid-column:1/-1;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 28px;box-shadow:0 2px 8px rgba(0,0,0,.1);}
+.admin-header h1{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:900;}
+.logout-btn{background:var(--rose);color:#fff;border:none;padding:8px 18px;border-radius:6px;font-size:.85rem;font-weight:700;cursor:pointer;}
+.logout-btn:hover{opacity:.9;}
+
+.admin-sidebar{background:#fff;border-right:1px solid #E2E8F0;padding:20px;display:flex;flex-direction:column;gap:10px;}
+.sidebar-item{padding:12px 16px;border-radius:8px;cursor:pointer;font-size:.9rem;font-weight:600;color:var(--muted);transition:.2s;}
+.sidebar-item:hover,.sidebar-item.active{background:var(--blue);color:#fff;}
+
+.admin-main{padding:28px;overflow-y:auto;grid-column:2;grid-row:2;}
+.admin-section{display:none;}
+.admin-section.active{display:block;}
+
+/* SECTION FORMATIONS */
+.formations-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-bottom:24px;}
+.formation-card{background:#fff;border-radius:12px;padding:20px;border:1px solid #E2E8F0;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+.formation-card h3{font-size:1.05rem;font-weight:700;color:var(--text);margin-bottom:8px;}
+.formation-card p{font-size:.85rem;color:var(--muted);line-height:1.5;margin-bottom:12px;}
+.formation-actions{display:flex;gap:8px;}
+.btn-small{padding:6px 12px;font-size:.8rem;border:none;border-radius:6px;cursor:pointer;transition:.2s;}
+.btn-edit{background:var(--blue);color:#fff;}
+.btn-delete{background:#DC2626;color:#fff;}
+.btn-small:hover{opacity:.85;}
+
+/* SECTION MEDIAS */
+.medias-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:24px;}
+.media-card{background:#fff;border-radius:12px;overflow:hidden;border:1px solid #E2E8F0;}
+.media-thumb{height:160px;background:linear-gradient(135deg,var(--blue),#1E3A8A);display:flex;align-items:center;justify-content:center;}
+.media-info{padding:16px;}
+.media-info h4{font-size:.95rem;font-weight:700;margin-bottom:4px;}
+.media-info p{font-size:.8rem;color:var(--muted);margin-bottom:8px;}
+.media-link{font-size:.75rem;color:var(--rose);word-break:break-all;}
+.media-actions{display:flex;gap:8px;margin-top:8px;}
+
+/* FORMULAIRES */
+.form-section{background:#fff;border-radius:12px;padding:24px;border:1px solid #E2E8F0;max-width:600px;margin-bottom:24px;}
+.form-section h3{font-size:1.2rem;font-weight:700;color:var(--text);margin-bottom:16px;}
+.form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.form-group label{font-size:.85rem;font-weight:600;color:var(--text);}
+.form-group input,.form-group textarea,.form-group select{padding:10px 14px;border:1.5px solid #CBD5E1;border-radius:8px;font-family:'Inter',sans-serif;font-size:.9rem;resize:vertical;}
+.form-group input:focus,.form-group textarea:focus,.form-group select:focus{outline:none;border-color:var(--rose);box-shadow:0 0 0 3px rgba(228,0,127,.1);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.btn-submit{background:var(--rose);color:#fff;padding:11px 24px;border:none;border-radius:8px;font-weight:700;cursor:pointer;transition:.2s;}
+.btn-submit:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(228,0,127,.3);}
+.btn-cancel{background:#E2E8F0;color:var(--text);padding:11px 24px;border:none;border-radius:8px;font-weight:600;cursor:pointer;}
+
+.message{padding:12px 16px;border-radius:8px;margin-bottom:16px;font-size:.9rem;}
+.message.success{background:#D1FAE5;color:#065F46;}
+.message.error{background:#FEE2E2;color:#991B1B;}
+
+@media(max-width:900px){
+  .admin-container.logged-in{grid-template-columns:1fr;}
+  .admin-sidebar{display:none;}
+  .admin-main{grid-column:1;padding:16px;}
+  .formations-list,.medias-list{grid-template-columns:1fr;}
+  .form-row{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-container" id="loginContainer">
+  <div class="login-box">
+    <h2>Admin Panel</h2>
+    <form class="login-form" id="loginForm">
+      <input type="password" id="passwordInput" placeholder="Mot de passe" required/>
+      <button type="submit" class="login-btn" id="loginBtn">Se connecter</button>
+      <div class="login-error" id="loginError"></div>
+    </form>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div class="admin-container" id="adminContainer">
+  <div class="admin-header">
+    <h1>Studios El-Shaddai — Admin</h1>
+    <button class="logout-btn" onclick="logout()">Se déconnecter</button>
+  </div>
+  
+  <div class="admin-sidebar">
+    <div class="sidebar-item active" onclick="switchSection('formations')">Formations</div>
+    <div class="sidebar-item" onclick="switchSection('medias')">Médias</div>
+    <div class="sidebar-item" onclick="switchSection('settings')">Paramètres</div>
+  </div>
+
+  <div class="admin-main">
+    <!-- FORMATIONS -->
+    <div class="admin-section active" id="formations-section">
+      <h2 style="margin-bottom:20px;">Gestion des Formations</h2>
+      <div class="form-section">
+        <h3>Ajouter une formation</h3>
+        <form id="formationForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Titre</label>
+              <input type="text" id="formTitle" required/>
+            </div>
+            <div class="form-group">
+              <label>Description</label>
+              <input type="text" id="formDesc" required/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Contenu (points clés)</label>
+            <textarea id="formContent" rows="4" placeholder="Séparez par des points" required></textarea>
+          </div>
+          <div style="display:flex;gap:10px;">
+            <button type="submit" class="btn-submit">Ajouter</button>
+            <button type="button" class="btn-cancel" onclick="resetFormationForm()">Annuler</button>
+          </div>
+        </form>
+      </div>
+      <div class="formations-list" id="formationsList"></div>
+    </div>
+
+    <!-- MEDIAS -->
+    <div class="admin-section" id="medias-section">
+      <h2 style="margin-bottom:20px;">Gestion des Médias</h2>
+      <div class="form-section">
+        <h3>Ajouter un média</h3>
+        <form id="mediaForm">
+          <div class="form-group">
+            <label>Titre</label>
+            <input type="text" id="mediaTitle" required/>
+          </div>
+          <div class="form-group">
+            <label>Type</label>
+            <select id="mediaType" required>
+              <option value="video">Vidéo</option>
+              <option value="audio">Audio</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Catégorie</label>
+            <select id="mediaCategory" required>
+              <option value="formations">Formation</option>
+              <option value="productions">Production</option>
+              <option value="audios">Audio</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Lien (YouTube, SoundCloud, etc.)</label>
+            <input type="url" id="mediaLink" placeholder="https://..." required/>
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea id="mediaDesc" rows="3" required></textarea>
+          </div>
+          <div style="display:flex;gap:10px;">
+            <button type="submit" class="btn-submit">Ajouter</button>
+            <button type="button" class="btn-cancel" onclick="resetMediaForm()">Annuler</button>
+          </div>
+        </form>
+      </div>
+      <div class="medias-list" id="mediasList"></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="admin-section" id="settings-section">
+      <h2 style="margin-bottom:20px;">Paramètres</h2>
+      <div class="form-section">
+        <h3>Changer le mot de passe</h3>
+        <form id="passwordForm">
+          <div class="form-group">
+            <label>Ancien mot de passe</label>
+            <input type="password" id="oldPassword" required/>
+          </div>
+          <div class="form-group">
+            <label>Nouveau mot de passe</label>
+            <input type="password" id="newPassword" required/>
+          </div>
+          <div class="form-group">
+            <label>Confirmer le nouveau mot de passe</label>
+            <input type="password" id="confirmPassword" required/>
+          </div>
+          <button type="submit" class="btn-submit">Changer le mot de passe</button>
+        </form>
+      </div>
+      <div class="form-section" style="margin-top:24px;">
+        <h3>Exporter les données</h3>
+        <p style="color:var(--muted);font-size:.9rem;margin-bottom:12px;">Téléchargez une sauvegarde de vos données (formations et médias)</p>
+        <button class="btn-submit" onclick="exportData()">Télécharger la sauvegarde</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== AUTHENTIFICATION & RATE LIMITING =====
+const INITIAL_PASSWORD = 'elshaddai123';
+const RATE_LIMIT_KEY = 'admin_rate_limit';
+const RATE_LIMIT_MAX = 3;
+const RATE_LIMIT_DURATION = 15 * 60 * 1000; // 15 minutes
+
+function checkRateLimit(){
+  const stored = localStorage.getItem(RATE_LIMIT_KEY);
+  if(!stored) return true;
+  
+  const {attempts, timestamp} = JSON.parse(stored);
+  const elapsed = Date.now() - timestamp;
+  
+  if(elapsed > RATE_LIMIT_DURATION){
+    localStorage.removeItem(RATE_LIMIT_KEY);
+    return true;
+  }
+  
+  return attempts < RATE_LIMIT_MAX;
+}
+
+function incrementRateLimit(){
+  const stored = localStorage.getItem(RATE_LIMIT_KEY);
+  let data = {attempts: 1, timestamp: Date.now()};
+  
+  if(stored){
+    data = JSON.parse(stored);
+    data.attempts++;
+  }
+  
+  localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(data));
+}
+
+function simpleHash(str){
+  let hash = 0;
+  for(let i=0;i<str.length;i++){
+    const char = str.charCodeAt(i);
+    hash = ((hash<<5)-hash)+char;
+    hash = hash&hash;
+  }
+  return hash.toString();
+}
+
+document.getElementById('loginForm').addEventListener('submit',function(e){
+  e.preventDefault();
+  const pwd = document.getElementById('passwordInput').value;
+  const error = document.getElementById('loginError');
+  
+  if(!checkRateLimit()){
+    error.textContent = 'Trop de tentatives. Réessayez dans 15 minutes.';
+    return;
+  }
+  
+  const storedHash = localStorage.getItem('admin_password') || simpleHash(INITIAL_PASSWORD);
+  if(simpleHash(pwd) === storedHash){
+    localStorage.setItem('admin_authenticated', 'true');
+    document.getElementById('loginContainer').style.display = 'none';
+    document.getElementById('adminContainer').classList.add('logged-in');
+    loadData();
+    localStorage.removeItem(RATE_LIMIT_KEY);
+  } else {
+    incrementRateLimit();
+    error.textContent = 'Mot de passe incorrect.';
+    document.getElementById('passwordInput').value = '';
+  }
+});
+
+function logout(){
+  localStorage.removeItem('admin_authenticated');
+  location.reload();
+}
+
+// ===== INITIALIZATION =====
+if(localStorage.getItem('admin_authenticated')){
+  document.getElementById('loginContainer').style.display = 'none';
+  document.getElementById('adminContainer').classList.add('logged-in');
+  loadData();
+} else {
+  document.getElementById('adminContainer').style.display = 'none';
+}
+
+// ===== GESTION FORMATIONS =====
+function loadFormations(){
+  const formations = JSON.parse(localStorage.getItem('formations') || '[]');
+  const list = document.getElementById('formationsList');
+  list.innerHTML = '';
+  
+  formations.forEach((f,i)=>{
+    const card = document.createElement('div');
+    card.className = 'formation-card';
+    card.innerHTML = `
+      <h3>${f.title}</h3>
+      <p>${f.desc}</p>
+      <small style="color:#999;">${f.content.substring(0,50)}...</small>
+      <div class="formation-actions">
+        <button class="btn-small btn-edit" onclick="editFormation(${i})">Modifier</button>
+        <button class="btn-small btn-delete" onclick="deleteFormation(${i})">Supprimer</button>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+document.getElementById('formationForm').addEventListener('submit',function(e){
+  e.preventDefault();
+  const formations = JSON.parse(localStorage.getItem('formations') || '[]');
+  
+  formations.push({
+    title: document.getElementById('formTitle').value,
+    desc: document.getElementById('formDesc').value,
+    content: document.getElementById('formContent').value
+  });
+  
+  localStorage.setItem('formations', JSON.stringify(formations));
+  resetFormationForm();
+  loadFormations();
+  showMessage('Formation ajoutée avec succès!', 'success');
+});
+
+function deleteFormation(idx){
+  if(!confirm('Êtes-vous sûr?')) return;
+  const formations = JSON.parse(localStorage.getItem('formations') || '[]');
+  formations.splice(idx,1);
+  localStorage.setItem('formations', JSON.stringify(formations));
+  loadFormations();
+  showMessage('Formation supprimée.', 'success');
+}
+
+function resetFormationForm(){
+  document.getElementById('formationForm').reset();
+}
+
+// ===== GESTION MEDIAS =====
+function loadMedias(){
+  const medias = JSON.parse(localStorage.getItem('medias') || '[]');
+  const list = document.getElementById('mediasList');
+  list.innerHTML = '';
+  
+  medias.forEach((m,i)=>{
+    const card = document.createElement('div');
+    card.className = 'media-card';
+    card.innerHTML = `
+      <div class="media-thumb"></div>
+      <div class="media-info">
+        <h4>${m.title}</h4>
+        <p>${m.desc}</p>
+        <div class="media-link">🔗 ${m.link}</div>
+        <div class="media-actions">
+          <button class="btn-small btn-edit" onclick="deleteMedia(${i})">Supprimer</button>
+        </div>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+document.getElementById('mediaForm').addEventListener('submit',function(e){
+  e.preventDefault();
+  const medias = JSON.parse(localStorage.getItem('medias') || '[]');
+  
+  medias.push({
+    title: document.getElementById('mediaTitle').value,
+    type: document.getElementById('mediaType').value,
+    category: document.getElementById('mediaCategory').value,
+    link: document.getElementById('mediaLink').value,
+    desc: document.getElementById('mediaDesc').value
+  });
+  
+  localStorage.setItem('medias', JSON.stringify(medias));
+  resetMediaForm();
+  loadMedias();
+  showMessage('Média ajouté avec succès!', 'success');
+});
+
+function deleteMedia(idx){
+  if(!confirm('Êtes-vous sûr?')) return;
+  const medias = JSON.parse(localStorage.getItem('medias') || '[]');
+  medias.splice(idx,1);
+  localStorage.setItem('medias', JSON.stringify(medias));
+  loadMedias();
+  showMessage('Média supprimé.', 'success');
+}
+
+function resetMediaForm(){
+  document.getElementById('mediaForm').reset();
+}
+
+// ===== PARAMETRES =====
+document.getElementById('passwordForm').addEventListener('submit',function(e){
+  e.preventDefault();
+  const old = document.getElementById('oldPassword').value;
+  const newPwd = document.getElementById('newPassword').value;
+  const confirm = document.getElementById('confirmPassword').value;
+  
+  const storedHash = localStorage.getItem('admin_password') || simpleHash(INITIAL_PASSWORD);
+  
+  if(simpleHash(old) !== storedHash){
+    showMessage('Ancien mot de passe incorrect.', 'error');
+    return;
+  }
+  
+  if(newPwd !== confirm){
+    showMessage('Les nouveaux mots de passe ne correspondent pas.', 'error');
+    return;
+  }
+  
+  if(newPwd.length < 6){
+    showMessage('Le mot de passe doit contenir au moins 6 caractères.', 'error');
+    return;
+  }
+  
+  localStorage.setItem('admin_password', simpleHash(newPwd));
+  document.getElementById('passwordForm').reset();
+  showMessage('Mot de passe changé avec succès!', 'success');
+});
+
+function exportData(){
+  const data = {
+    formations: JSON.parse(localStorage.getItem('formations') || '[]'),
+    medias: JSON.parse(localStorage.getItem('medias') || '[]'),
+    exported: new Date().toISOString()
+  };
+  
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'elshaddai-backup.json';
+  a.click();
+}
+
+// ===== UI UTILS =====
+function switchSection(section){
+  document.querySelectorAll('.admin-section').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(el=>el.classList.remove('active'));
+  document.getElementById(section+'-section').classList.add('active');
+  event.target.classList.add('active');
+}
+
+function showMessage(text, type){
+  const msg = document.createElement('div');
+  msg.className = 'message '+type;
+  msg.textContent = text;
+  document.querySelector('.admin-main').insertBefore(msg, document.querySelector('.admin-main').firstChild);
+  setTimeout(()=>msg.remove(),3000);
+}
+
+function loadData(){
+  loadFormations();
+  loadMedias();
+}
+</script>
+</body>
+</html>
